@@ -1,0 +1,46 @@
+import requests
+from bs4 import BeautifulSoup
+import os
+def makeFile():
+	os.makedirs('/Users/seunoboru/Desktop/fic/')
+	os.chdir('/Users/seunoboru/Desktop/fic/')
+
+#Get all Chapter URL and each Tile
+def getChapterHtml():
+	chapter_html = []
+	title = []
+	headers = {'User-Agent':"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1"}##浏览器请求头（大部分网站没有这个请求头会报错、请务必加上哦）
+	all_url = 'http://book.zongheng.com/showchapter/761710.html' 
+	start_html = requests.get(all_url,  headers=headers)
+	soup = BeautifulSoup(start_html.text, 'lxml')
+	chapter_list = soup.find_all('li', class_=' col-4')
+	for list in chapter_list:
+		html = list.find('a')['href']
+		tit = list.find('a').get_text()
+		chapter_html.append(html)
+		title.append(tit)
+	return chapter_html,title
+
+#Get one Chapter Content
+def getChapterContent(chapter_html):
+	chapter_content = ' '
+	headers = {'User-Agent':"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1"}
+	url = 'http://book.zongheng.com/chapter/761710/42337796.html'
+	start_html = requests.get(url, headers=headers)
+	soup = BeautifulSoup(start_html.text, 'lxml')
+	content = soup.find('div', class_='content').find_all('p')
+	for i in content:
+		chapter_content = chapter_content + i.get_text() + '\n'
+	return chapter_content
+
+if __name__ == '__main__':
+	chapter_html = []
+	title = []
+	chapter_html,title = getChapterHtml()
+	makeFile()
+	for i in range(len(title)):
+		content = getChapterContent(chapter_html[i])
+		file = open(title[i]+'.txt', 'w')
+		file.write(content)
+		file.close()
+
